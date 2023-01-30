@@ -9,6 +9,7 @@ import random
 import uuid
 
 import d4rl
+import visual_pin_pad
 import gym
 import numpy as np
 import pyrallis
