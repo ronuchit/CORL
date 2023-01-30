@@ -591,7 +591,7 @@ def train(config: TrainConfig):
         log_dict = trainer.train(batch)
         wandb.log(log_dict, step=trainer.total_it)
         # Evaluate episode
-        if (t + 1) % config.eval_freq == 0:
+        if t == 0 or (t + 1) % config.eval_freq == 0:
             print(f"Time steps: {t + 1}")
             eval_scores = eval_actor(
                 env,
