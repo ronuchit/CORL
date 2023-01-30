@@ -1,0 +1,17 @@
+# @package _global_
+
+action_repeat: 1
+modality: state
+width: 10
+height: 10
+wall_removal_percentage: .3
+removed_walls_per_task: 10
+enable_render: False
+discrete_to_continuous: True
+variations: default
+fixed_episode_length: 100
+observe_task: True
+
+env_wrappers:
+  - _target_: envs.gym.wrappers.FixedEpisodeLengthWrapper
+    fixed_episode_length: ${fixed_episode_length}

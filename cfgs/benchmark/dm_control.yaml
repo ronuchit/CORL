@@ -1,0 +1,5 @@
+defaults:
+  - dm_control/task: ${get_task_specific_config:${default:${task},cartpole-swingup}}
+  - dm_control/modality: ${default:${modality},state}
+
+_target_: envs.dm_control.DMCSBenchmark

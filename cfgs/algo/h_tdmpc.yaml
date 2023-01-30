@@ -1,0 +1,6 @@
+# @package _global_
+
+agent:
+  _target_: algorithm.h_tdmpc.HTDMPC
+
+hierarchical: true

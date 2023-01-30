@@ -1,0 +1,7 @@
+scheme:
+  _target_: algorithm.goal_relabeling.inv_dynamics_action_manager
+
+goal_dim: ${hierarchy.manager.action_dim}
+# We use "worker" as reward space by default, but be aware that goal-conditioned rewards
+# based on distance to the goal in the worker's latent space will obviously not work.
+reward_space: worker

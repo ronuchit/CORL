@@ -1,0 +1,6 @@
+scheme:
+  _target_: algorithm.goal_assignment.next_z_manager
+  delta: ${oc.select:replay_goal_relabeling.scheme.delta,false}
+
+goal_dim: ${hierarchy.manager.latent_dim}
+reward_space: manager

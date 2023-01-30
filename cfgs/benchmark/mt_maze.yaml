@@ -1,0 +1,4 @@
+defaults:
+  - mt_maze: default
+
+_target_: envs.mt_maze.MtMazeBenchmark

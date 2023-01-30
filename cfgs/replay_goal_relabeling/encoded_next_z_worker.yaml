@@ -1,0 +1,5 @@
+scheme:
+  _target_: algorithm.goal_relabeling.encoded_next_z_worker
+
+goal_dim: ${hierarchy.manager.latent_dim}
+reward_space: manager

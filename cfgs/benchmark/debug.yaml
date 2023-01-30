@@ -1,0 +1,7 @@
+defaults:
+  - debug: default
+  - debug/task: ${task}
+
+_target_: envs.debug.DebugBenchmark
+
+dataset_dir: ${base_exp_dir}/data/debug

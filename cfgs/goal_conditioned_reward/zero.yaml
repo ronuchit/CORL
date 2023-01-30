@@ -1,0 +1,7 @@
+formula:
+  _target_: algorithm.goal_conditioned_reward.zero
+
+compute_z_and_next_z: false
+# Currently using a predictor for consistency with the `task` reward, but this
+# may be changed later.
+use_predictor: true

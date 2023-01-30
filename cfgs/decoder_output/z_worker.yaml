@@ -1,0 +1,7 @@
+# @package _global_
+
+decoder_output_scheme:
+  _target_: algorithm.decoder_output.z_worker
+
+decoder_output_space: worker
+decoder_output_shape: ["${latent_dim}"]

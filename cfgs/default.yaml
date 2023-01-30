@@ -1,0 +1,352 @@
+defaults:
+  - _self_
+  - setup: base
+  - logbook: xplogger
+  - notifier: zulip
+  - benchmark: dm_control
+  - optional task: null
+  - optional modality: null
+  - factor: base
+  - hierarchy: manager_worker
+  - algo: tdmpc
+  - optimizer: adam
+  # How to relabel worker goals from the replay buffer.
+  - replay_goal_relabeling: next_z_worker
+  # How to generate worker goals during H-TDMPC planning.
+  - goal_assignment: decoded_next_z_manager
+  # How to compute the reward in the goal-conditioned setting.
+  - goal_conditioned_reward: minus_mse
+  # How to construct inputs for the encoder
+  - encoder_input: obs
+  # How to decode a latent state.
+  - decoder_output: obs
+  - override hydra/launcher: slurm
+
+
+# Hierarchy
+is_goal_conditioned: false
+hierarchical: false
+# how to relabel manager actions with inv dynamics model's prediction.
+replay_manager_action_relabeling: inverse_dynamics
+# Whether the manager should be updated before or after the worker.
+update_manager_before_worker: ${hierarchy.manager.propagate_manager_gradients_to_worker}
+# How many steps between each update of the goal (when relabeling during training).
+replay_goal_relabeling_frequency: 1
+# Convenience names for selected config groups.
+replay_goal_relabeling:
+  name: ${hydra:runtime.choices.replay_goal_relabeling}
+goal_assignment:
+  name: ${hydra:runtime.choices.goal_assignment}
+goal_conditioned_reward:
+  name: ${hydra:runtime.choices.goal_conditioned_reward}
+encoder_input: 
+  name: ${hydra:runtime.choices.encoder_input}
+  scheme:
+    _target_: ???
+    propagate_gradient: true
+  # Input shape of mlp encoder
+  mlp_input_shape: ???
+  # Supported types: mlp, cnn, mixed
+  encoder_type: ???
+decoder_output: ${hydra:runtime.choices.decoder_output}
+visualize_manager_goals: false
+
+# agent
+agent:
+  _target_: ???
+algo: ${hydra:runtime.choices.algo}
+load_from: null
+load_from_step: ${get_load_from_step:${load_from}}
+# Decoder modes: (1) skip: do not instantiate decoder, (2) detach: instantiate 
+# but stop gradients, (3) propagate: backpropagate gradients
+decoder_mode: skip
+# Whether the first latent z should be used to optimize the decoder (if `false`
+# then we only decoded the unrolled z's).
+decode_first_z: false
+decoder_output_scheme:
+  _target_: ???
+decoder_output_space: ???
+decoder_output_shape: ???
+
+# Arbitrary keys may be added to the schedule with `+schedule.option=...`. The agent
+# will modify its own config according to the specified schedule at each call to
+# `agent.update()`.
+# Note that schedule steps are expressed in agent training steps, implying that:
+#   - they are `action_repeat` times less than the number of env steps
+#   - the schedule will be on pause if the agent stops being updated (e.g., in the
+#     hierarchical setting when using `hierarchy.{manager,worker}.train_steps`)
+# Currently available schedulers:
+#   - "linear" (linear decay)
+#   - "exp" (exponential decay)
+#   - "round" (wrapper around another scheduler to round to nearest integer)
+#   - null (as an object and not a string => will ignore this schedule)
+schedule:
+  discrete_actions_eps_greedy: exp(0.999, 0.01, 0.9999)
+  plan_std: linear(0.5, ${min_std}, 25000)
+  plan_horizon: round(linear(${min:${horizon},1}, ${horizon}, 25000))
+
+# environment
+task: ${hydra:runtime.choices.task}
+modality: ???
+action_repeat: 1
+discount: 0.99
+# Set to null to enable variable-length episodes.
+fixed_episode_length: ${eval:1000 // ${action_repeat}}
+time_limit: null  # to be provided when changing `fixed_episode_length`
+train_steps: ${eval:500000 // ${action_repeat}}
+# Whether to wrap environments with discrete actions into continuous actions.
+discrete_to_continuous: false
+
+
+# offline
+# In offline mode, the agent does not collect new data: it is only updated from
+# the replay buffer, which is pre-populated from an existing dataset.
+offline: false
+# How often to log train metrics in offline mode.
+offline_log_train_metrics_freq: ${eval:${eval_freq} // 10}
+# Whether we should ignore the `terminals` flag to decide when an episode is
+# done when loading offline data (thus relying only on timeouts).
+ignore_terminals: false
+# How to transform the original reward found in the offline dataset. If provided,
+# this should be a string like 'lambda r: (r - 0.5) * 2' such that calling `eval()`
+# on it returns the desired function. Note that this only modifies the reward in
+# the offline dataset, but not the reward being reported during evaluation.
+offline_reward_transform: null
+offline_dataset_size: ???
+# Among "skip", "detach", "propagate" and "propagate_all" (the difference between
+# "propagate" and "propagate_all" is that the former only propagates through the
+# initial state encoding, while the latter also propagates through the next state's).
+inv_dynamics_mode: skip
+# Among: "next_z", "next_z_delta", "next_obs"
+inv_dynamics_input: next_z
+# Whether to normalize (mean 0 / std 1) observed variables. This is currently only
+# implemented in the offline setting.
+normalize_obs: false
+
+# multi-task
+variations: null
+observe_task: false
+task_seed: 1
+
+# planning
+iterations: 6
+# Number of random trajectories sampled at each CEM iteration.
+num_samples: 512
+num_elites: 64
+# Number of trajectories to sample from the policy, expressed as a fraction of
+# `num_samples`.
+mixture_coef: 0.05
+# Either "add" (policy samples are added to `num_samples` random ones) or "replace"
+# (they replace random ones, for a total of `num_samples` trajectories to evaluate).
+policy_samples_mode: "add"
+min_std: 0.05
+temperature: 0.5
+momentum: 0.1
+# reactive = true has the same effect as horizon = 0
+# but without changing the horizon used for model training
+reactive: false
+# Whether to use the mean of the policy or a sample when computing the Q-value associated
+# to the last predicted latent state in a trajectory.
+# Note that this option is currently ignored in the discrete setting, where we always use
+# the maximum Q-value.
+use_policy_mean_in_state_value: false
+# Standard deviation used during planning.
+plan_std: ${min_std}
+# Horizon used during planning.
+plan_horizon: ${horizon}
+# Epsilon-greedy exploration for discrete actions.
+discrete_actions_eps_greedy: 0.01
+
+# for discrete planning using search (warning: search assumes deterministic environments)
+search:
+  # inverse temperature to use when getting action probabilities from Q-values
+  model_q_beta: 1.0
+  # For MCTS agent
+  agent:
+    _target_: algorithm.search.MCTSAgent
+    max_depth: ${horizon}
+    num_playouts: 10
+  # For full search agent
+  # agent:
+  #   _target_: algorithm.search.FullSearchAgent
+  #   max_depth: ${horizon}
+
+# policy
+clip_action_noise: 0.3
+
+# learning
+stochastic_policy:
+  enable: false
+  learn_alpha: true
+  alpha_init_temperature: 0.1
+  log_std_min: -5
+  log_std_max: 2
+  nll_loss_action_clip: 0.99
+  target_entropy: null  # default value = -|action space|
+  add_entropy_bonus_to_critic: true
+batch_size: 512
+horizon: 5
+reward_coef: 0.5
+critic_q_coef: 0.1
+consistency_coef: 2
+reconstruct_coef: 0.1
+# `policy_coef` is only used when `update_pi_separately` is false.
+policy_coef: 1
+rho: 0.5
+kappa: 0.1
+lr: 1e-3
+grad_clip_norm: 10
+warmup_steps: ${if:${offline}, 0, 5_000}
+update_freq: 2
+tau: 0.01
+use_random_image_augmentation: true
+# Whether to use the mean of the policy or a sample when computing the TD target
+# by bootstrapping with `Q(next_z, pi(next_z))`.
+# Note that this option is currently ignored in the discrete setting, where we
+# always use the argmax of Q-values.
+use_policy_mean_in_td_target: false
+# Whether the dynamics model should predict the difference between the current and
+# next states (`true`), or directly predict the next state (`false`).
+dynamics_delta: false
+dynamics_ensemble_size: 1  # 1 means no ensemble
+mopo:
+  enable: false
+  penalty_coef: 1.0
+# Whether to boostrap the value function at the end of an episode.
+# Be aware when setting this option to `false` that we will still
+# use the value function on the last latent state predicted during
+# planning, for `horizon >= 1`.
+end_of_episode_bootstrap: true
+# Whether the policy should be updated separately from the other components (as in
+# the original TD-MPC implementation), or simultaneously with them.
+update_pi_separately: true
+# Whether the policy loss should provide gradient to the latent representation.
+propagate_pi_loss_to_z: false
+# Whether the policy loss should provide gradient to the goal (NB: currently this only
+# works when the goal relabeling scheme only uses the worker model, as gradient is
+# not propagated from the worker to the manager).
+propagate_pi_loss_to_goal: false
+# Whether the critic loss should provide gradient to the latent representation.
+propagate_critic_loss_to_z: true
+# Whether the reward predictor loss should provide gradient to the latent representation.
+propagate_reward_loss_to_z: true
+# Whether to rescale gradients based on the number of update steps.
+rescale_gradients: true
+# By default `pi_optimizer` is not defined, which means it will use the same settings
+# as `optimizer`. To use different settings, set e.g. `+optimizer@pi_optimizer=sgd` on
+# the command-line.
+pi_optimizer: null
+# VIP loss.
+vip:
+  coef: 0.0
+  discount: ${discount}
+  max_trajectory_length: -1
+  delta_term_conditioned_on_next_obs: false
+  average_td_term_across_batch: false
+
+# pixels (placeholders, values are set in composed configs)
+img_size: null
+frame_stack: null
+num_channels_enc: null
+
+# replay buffer
+buffer_device: ${eval:'{"pixels":"cpu", "state":"cuda"}["${modality}"]'}
+max_buffer_size: ${if:${offline}, inf, 1_000_000}
+force_buffer_size: 0 # set to a value >0 to force the size
+# This is a "best guess" at the episode's length, in order to initialize some data
+# structures. It must be equal to `fixed_episode_length` if that option is set, and
+# otherwise its value should not change the results (but may impact memory usage).
+init_episode_length: ${default:${fixed_episode_length}, 1_000}
+per:  # prioritized experience replay
+  enable: true
+  alpha: 0.6
+  beta: 0.4
+# How to update the various models based on replay samples:
+#   - "original": original TD-MPC implementation
+#   - "can_sample_all_steps": allow sampling all steps from an episode (including
+#     those near the end), while constraining the updates to make sure we do not
+#     accidentally perform updates based on data from another episode
+#   - "can_sample_one_more_step": allow sampling one step further towards the end of
+#     an episode (fixing the issue where the last step was never used in losses)
+#   - "update_one_more_step": compute losses over one more step, so as to use all
+#     the data sampled from the replay buffer
+update_strategy: original
+
+# architecture
+enc_dim: 256
+mlp_dim: 512
+latent_dim: 50
+num_critics: 2
+use_actor: true # false means actions obtained from argmax on Q-values
+
+# local logs override wandb, logbook, zulip
+local_logs: false
+use_logbook: ${not:${local_logs}}
+use_zulip: ${not:${local_logs}}
+
+# wandb
+use_wandb: ${not:${local_logs}}
+wandb_project: tdmpc
+wandb_entity: hwm
+wandb_save_models: false
+
+# wrappers
+env_wrappers: []
+
+# misc
+seed: 1
+# Seed controlling the sampling from the replay buffer.
+buffer_seed: ${seed}
+# Seed used during initialization (for model weights in particular).
+init_seed: ${seed}
+deterministic: false
+exp_name: default
+eval_freq: ${eval:20_000 // ${action_repeat}}
+eval_episodes: 10
+# How many episodes to use for the very first evaluation (at step 0). If `null`
+# then `eval_episodes` is used instead.
+eval_init_episodes: null
+# Whether to keep some noise during evaluation (ex: sampling from stochastic policy).
+eval_noise: false
+save_video: false
+save_model_after_train: false
+save_model_after_eval: false
+snapshot: false
+
+# debug
+# When `debug_config` is set, we skip the call to `train()`, thus only going
+# through the experiment's setup steps and logging the config.
+debug_config: false
+# Setting this flag will disable the initialization of the last layer of value
+# functions to zero. This can be useful to initalize a model with non-zero value
+# estimates for testing purpose.
+nonzero_init_value_functions: false
+# Whether to automatically delete an existing test folder. Can be useful when
+# debugging tests with Visual Studio, since restarting a test may not properly
+# delete its current folder.
+auto_delete_test_folder: false
+
+# convenience
+task_title: ${get_task_title:${task}}
+obs_shape: ???
+action_shape: ???
+action_dim: null
+discrete_actions: ???
+num_actions: ???
+cfg_hash: null # will be replaced in train()
+
+# Logging
+base_exp_dir: /fsx/${oc.env:USER}/hwm_tdmpc
+log_dir: ${base_exp_dir}/logs/${setup.id}
+snapshot_dir: ${base_exp_dir}/snapshots/${cfg_hash}
+
+# Hydra
+hydra:
+  run:
+    dir: ${base_exp_dir}/run/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: ${base_exp_dir}/multirun/${now:%Y-%m-%d_%H-%M-%S}
+  job_logging:
+    root:
+      # Do not add any handler through Hydra as we are relying on xplogger instead.
+      handlers: []

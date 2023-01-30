@@ -1,0 +1,23 @@
+formula:
+  # This reward is the relative reduction in distance to the goal.
+  _target_: algorithm.goal_conditioned_reward.normalized_closer
+
+  # The motivation for using `manager.time_interval` as scaling factor is that if the
+  # manager sets a goal K steps in the future, we expect the worker to do ~1/K-th of
+  # the way in a single step.
+  scale_factor: ${hierarchy.manager.time_interval}
+
+  # The motivation for the default `-scale_factor` formula is the following:
+  #   - We want a lower bound on the reward because large values can cause optimization
+  #     issues, and if the agent is already very close to the goal, there is a risk to
+  #     obtain a large negative reward when moving away from it.
+  #   - Another motivation for the lower bound is to avoid a situation where the agent
+  #     would be "scared" to get too close to the goal because of the risk of getting a
+  #     large negative reward afterwards (if it ends up moving away from it slightly).
+  #   - We need to be careful that setting such a lower bound should not incentivize the
+  #     agent to slightly move away from the goal at low cost, then immediately get back
+  #     to the goal (which gives a max reward equal to `scale_factor`).
+  min_reward: ${eval:'-${.scale_factor}'}
+
+compute_z_and_next_z: true
+use_predictor: false

@@ -1,0 +1,4 @@
+defaults:
+  - gym: default
+
+_target_: envs.gym.GymBenchmark

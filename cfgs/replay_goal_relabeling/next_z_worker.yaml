@@ -1,0 +1,5 @@
+scheme:
+  _target_: algorithm.goal_relabeling.next_z_worker
+
+goal_dim: ${latent_dim}
+reward_space: worker

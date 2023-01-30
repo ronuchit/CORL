@@ -1,0 +1,42 @@
+defaults:
+  - visual_pin_pad: default
+
+_target_: visual_pin_pad.VisualPinPadEnv
+
+# The below are parameters inputted to the constructor of VisualPinPadEnv.
+num_pads: 3  # number of pin pads, which affects the arena layout
+pad_goal_sequence: [0, 1, 2]  # each number must be from {0, 1, ..., num_pads - 1}
+arena_size: 84  # arena is arena_size x arena_size pixels
+history_area_size: 32  # history area is arena_size x history_area_size pixels
+history_square_halfsize: 5  # in pixels, the half-size of each square in history area
+dt: 0.1  # how quickly acceleration propagates to position/velocity changes
+max_vel: 10.0  # maximum velocity
+# Amount of noise added to observations of the agent's position and velocity. This is
+# the std of a Gaussian applied to both values (scaled by `max_vel` for the velocity).
+state_obs_pos_vel_noise: 0.0
+# The "wind" is a random amount added to the agent's action. At each timestep it changes
+# by either `+delta` or `-delta` (in a random walk style). Its absolute value is capped
+# by `max_abs`. If `is_observed` is true, the wind is included in the observation space.
+wind:
+  delta: 0.0
+  max_abs: 0.0
+  is_observed: false
+agent_halfsize: 5  # in pixels, the half-size of the agent square
+fixed_episode_length: ${fixed_episode_length}
+fixed_start_position: true
+seed: ${seed}
+img_size: ${img_size}
+frame_stack: ${frame_stack}
+action_repeat: ${action_repeat}
+modality: ${modality}
+dataset:
+  base_dir: ${benchmark.dataset_dir}
+  num_transitions: 1_000_000
+  # `p_reach_target` indicates the intended probability that the agent goes all
+  # the way to its target pad. It is translated into a small probability of changing
+  # the target pad at each timestep, based on the average number of timesteps
+  # between each pad being touched. It is suggested to set it to a value <1 to
+  # ensure the agent is not getting stuck.
+  p_reach_target: 0.75
+  seed: 0
+  write_video: false

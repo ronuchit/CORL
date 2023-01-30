@@ -1,0 +1,10 @@
+scheme:
+  _target_: algorithm.goal_relabeling.decoded_encoded_t_plus_k_z_worker
+  # Note that `k` may be either an integer or a pair [k_min, k_max].
+  # In the latter case we sample uniformly from this range.
+  k: ${hierarchy.manager.time_interval}
+  seed: ${seed}
+
+# NB: multi-dimensional goals are not currently supported.
+goal_dim: ${hierarchy.manager.decoder_output_shape[0]}
+reward_space: ${hierarchy.manager.decoder_output_space}

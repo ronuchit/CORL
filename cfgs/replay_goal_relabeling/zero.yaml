@@ -1,0 +1,6 @@
+scheme:
+  _target_: algorithm.goal_relabeling.zero
+  dim: ${goal_assignment.goal_dim}
+
+goal_dim: ${goal_assignment.goal_dim}
+reward_space: ${goal_assignment.reward_space}

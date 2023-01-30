@@ -1,0 +1,8 @@
+scheme:
+  _target_: algorithm.goal_relabeling.next_z_manager_inv_dynamics
+  # Whether the goal should be the difference between the manager prediction
+  # at time `t+k` and the manager state at time `t`.
+  delta: false
+
+goal_dim: ${hierarchy.manager.latent_dim}
+reward_space: manager

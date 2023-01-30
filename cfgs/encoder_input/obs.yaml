@@ -1,0 +1,5 @@
+scheme:
+  _target_: algorithm.encoder_input.obs
+
+mlp_input_shape: ${oc.select:obs_shape, null}
+encoder_type: ${map:${modality},{pixels:cnn,state:mlp}}

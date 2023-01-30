@@ -1,0 +1,18 @@
+defaults:
+  - submitit_slurm
+
+cpus_per_task: 10
+gpus_per_node: 1
+mem_gb: 64
+nodes: 1
+tasks_per_node: 1
+timeout_min: 1440
+constraint: null
+partition: learnlab
+comment: hwm_tdmpc
+name: hwm-${setup.script_id}
+submitit_folder: ${base_exp_dir}/logs/submitit/%j
+signal_delay_s: 120
+max_num_timeout: 3
+additional_parameters:
+  open-mode: append

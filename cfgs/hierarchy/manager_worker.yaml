@@ -1,0 +1,49 @@
+defaults:
+  - /algo@manager: tdmpc
+  - /algo@worker: tdmpc
+  - /encoder_input@manager.encoder_input: z_worker
+  - /decoder_output@manager: z_worker
+  - /encoder_input@worker.encoder_input: obs
+  - /decoder_output@worker: obs
+  - _self_
+
+manager:
+  agent:
+    agent_id: 1
+  latent_dim: ${eval:${latent_dim} // 5}
+  action_dim: 2
+  is_goal_conditioned: False
+  load_from: ${if:${is_not_none:${load_from}},${load_from}/manager,null}
+  decoder_mode: propagate
+  reconstruct_coef: 0.1
+  # how many worker steps for each manager step
+  time_interval: 2
+  # how many manager steps we perform when searching for the optimal action sequence at the manager level
+  horizon: 5
+  # how often does the manager plan (in terms of env step)
+  plan_frequency: 1
+  inv_dynamics_mode: propagate
+  inv_dynamics_input: next_z
+  propagate_manager_gradients_to_worker: false
+  train_steps: ${train_steps}
+  # Convenience names for selected config groups.
+  encoder_input: 
+    name: ${hydra:'runtime.choices[encoder_input@hierarchy.manager.encoder_input]'}
+    scheme:
+      propagate_gradient: ${hierarchy.manager.propagate_manager_gradients_to_worker}
+  decoder_output: ${hydra:'runtime.choices[decoder_output@hierarchy.manager]'}
+
+worker:
+  agent:
+    agent_id: 0
+  # how many worker steps we perform when searching for the optimal action sequence at the worker level
+  horizon: 2
+  is_goal_conditioned: True
+  load_from: ${if:${is_not_none:${load_from}},${load_from}/worker,null}
+  decoder_mode: skip
+  reconstruct_coef: 0.1
+  train_steps: ${train_steps}
+  # Convenience names for selected config groups.
+  encoder_input: 
+    name: ${hydra:'runtime.choices[encoder_input@hierarchy.worker.encoder_input]'}
+  decoder_output: ${hydra:'runtime.choices[decoder_output@hierarchy.worker]'}

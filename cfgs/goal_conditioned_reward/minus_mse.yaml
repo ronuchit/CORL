@@ -1,0 +1,5 @@
+formula:
+  _target_: algorithm.goal_conditioned_reward.minus_mse
+
+compute_z_and_next_z: true
+use_predictor: false

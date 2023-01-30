@@ -1,0 +1,4 @@
+# @package _global_
+
+fixed_episode_length: null
+modality: state

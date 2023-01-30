@@ -1,0 +1,5 @@
+# @package _global_
+
+frame_stack: 1
+num_channels_enc: 8
+img_size: 84
