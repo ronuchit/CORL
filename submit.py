@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 
+MAIN_FILE = "algorithms/iql.py"
 START_SEED = 456
 NUM_SEEDS = 10
 NUM_GPUS = 1
@@ -25,7 +26,7 @@ def _submit_job(job_name: str, log_dir: str, logfile_prefix: str,
     logfile_pattern = os.path.join(log_dir, f"{logfile_prefix}__%j.log")
     assert logfile_pattern.count("None") == 1
     logfile_pattern = logfile_pattern.replace("None", "%a")
-    mystr = (f"#!/bin/bash\npython algorithms/iql.py {args_and_flags_str} "
+    mystr = (f"#!/bin/bash\npython {MAIN_FILE} {args_and_flags_str} "
              f"--seed $SLURM_ARRAY_TASK_ID")
     temp_run_file = "temp_run_file.sh"
     assert not os.path.exists(temp_run_file)

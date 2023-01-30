@@ -1,6 +1,0 @@
-# @package _global_
-
-frame_stack: 3
-num_channels_enc: 8
-fixed_episode_length: ${eval:2000 // ${action_repeat}}
-img_size: ${eval:'${benchmark.debug.task.arena_size} + ${benchmark.debug.task.history_area_size}'}

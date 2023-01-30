@@ -1,9 +1,0 @@
-# @package _global_
-
-modality: pixels
-train_steps: ${eval:3000000 // ${action_repeat}}
-frame_stack: 3
-num_channels_enc: 32
-img_size: 84
-lr: 3e-4
-batch_size: 256

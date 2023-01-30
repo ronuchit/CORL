@@ -1,5 +1,0 @@
-scheme:
-  _target_: algorithm.encoder_input.obs_and_z_worker
-
-encoder_type: ${map:${modality},{pixels:mixed,state:mlp}}
-mlp_input_shape: ${map:${modality},{state:${expand_shape:${obs_shape},0,${latent_dim}},pixels:${oc.create:[${latent_dim}]}}}

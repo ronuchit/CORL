@@ -1,4 +1,0 @@
-# @package _global_
-
-agent:
-  _target_: algorithm.tdmpc.TDMPC

@@ -1,6 +1,0 @@
-scheme:
-  _target_: algorithm.goal_assignment.zero
-  dim: ${goal_assignment.goal_dim}
-
-goal_dim: 1  # arbitrary
-reward_space: worker

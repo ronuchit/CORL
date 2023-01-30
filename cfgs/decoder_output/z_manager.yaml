@@ -1,7 +1,0 @@
-# @package _global_
-
-decoder_output_scheme:
-  _target_: algorithm.decoder_output.z_manager
-
-decoder_output_space: manager
-decoder_output_shape: ["${hierarchy.manager.latent_dim}"]

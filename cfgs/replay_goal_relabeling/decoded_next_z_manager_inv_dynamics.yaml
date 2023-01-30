@@ -1,8 +1,0 @@
-scheme:
-  _target_: algorithm.goal_relabeling.decoded_next_z_manager_inv_dynamics
-  # Whether the goal should be the difference between the decoded manager prediction
-  # at time `t+k` and the decoded manager state at time `t`.
-  delta: false
-
-goal_dim: ${latent_dim}
-reward_space: worker

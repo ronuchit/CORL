@@ -8,8 +8,10 @@ from pathlib import Path
 import random
 import uuid
 
+import sys
+sys.path.append("../hwm_tdmpc/src/")
 import d4rl
-import visual_pin_pad
+import hwm_tdmpc.src.envs.debug.visual_pin_pad_env
 import gym
 import numpy as np
 import pyrallis
@@ -51,10 +53,11 @@ class TrainConfig:
     normalize_reward: bool = False  # Normalize reward
     # Wandb logging
     project: str = "CORL"
-    group: str = "IQL-D4RL"
+    group: str = ""
     name: str = "IQL"
 
     def __post_init__(self):
+        self.group = f"{self.name}-{self.env}"
         self.name = f"{self.name}-{self.env}-{str(uuid.uuid4())[:8]}"
         if self.checkpoints_path is not None:
             self.checkpoints_path = os.path.join(self.checkpoints_path, self.name)

@@ -1,5 +1,0 @@
-scheme:
-  _target_: algorithm.goal_relabeling.next_z_manager_prediction
-
-goal_dim: ${hierarchy.manager.latent_dim}
-reward_space: manager

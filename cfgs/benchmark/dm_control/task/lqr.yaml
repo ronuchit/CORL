@@ -1,7 +1,0 @@
-# @package _global_
-
-# Note that these are untested values, currently only set in order
-# to be able to load the env (the default DM Control Suite env has
-# no time limit).
-action_repeat: 4
-time_limit: 30

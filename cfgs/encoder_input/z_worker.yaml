@@ -1,5 +1,0 @@
-scheme:
-  _target_: algorithm.encoder_input.z_worker
-
-mlp_input_shape: ["${latent_dim}"]
-encoder_type: mlp

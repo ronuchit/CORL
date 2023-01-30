@@ -1,7 +1,0 @@
-# @package _global_
-
-decoder_output_scheme:
-  _target_: algorithm.decoder_output.obs
-
-decoder_output_space: env
-decoder_output_shape: ${oc.select:obs_shape, null}

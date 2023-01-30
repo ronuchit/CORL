@@ -1,7 +1,0 @@
-formula:
-  _target_: algorithm.goal_conditioned_reward.task_minus_mse
-  task_reward_coef: 1.0
-  minus_mse_reward_coef: 1.0
-
-compute_z_and_next_z: true
-use_predictor: true

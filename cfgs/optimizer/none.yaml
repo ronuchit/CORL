@@ -1,9 +1,0 @@
-# This is a "dummy" optimizer whose sole purpose is to make it possible to mix and
-# match different optimizers for the worker and manager, for instance by combining:
-#   optimizer=none
-#   +optimizer@hierarchy.manager.optimizer=sgd
-#   +optimizer@hierarchy.worker.optimizer=adam
-# It would not be possible to use `optimizer=sgd` or `optimizer=adam` here, because
-# `cfg.optimizer` would contain some optimizer-specific settings that would conflict
-# with either the worker's or the manager's optimizer.
-_target_: null

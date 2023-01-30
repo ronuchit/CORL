@@ -1,7 +1,0 @@
-defaults:
-  - d4rl: default
-
-_target_: envs.d4rl.D4RLBenchmark
-
-dataset_dir: ${base_exp_dir}/data/d4rl
-suppress_import_error: true
