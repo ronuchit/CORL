@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import random
 import uuid
-
+import imageio
 import sys
 sys.path.append("../hwm_tdmpc/src/")
 import d4rl
@@ -41,6 +41,7 @@ class TrainConfig:
     max_timesteps: int = int(1e6)  # Max time steps to run environment
     checkpoints_path: Optional[str] = None  # Save path
     load_model: str = ""  # Model load file name, "" doesn't load
+    do_render: bool = False
     # IQL
     buffer_size: int = 2_000_000  # Replay buffer size
     batch_size: int = 256  # Batch size for all networks
@@ -188,19 +189,28 @@ def wandb_init(config: dict) -> None:
 
 @torch.no_grad()
 def eval_actor(
-    env: gym.Env, actor: nn.Module, device: str, n_episodes: int, seed: int
+    env: gym.Env, actor: nn.Module, device: str, n_episodes: int, seed: int, do_render: bool,
 ) -> np.ndarray:
     env.seed(seed)
     actor.eval()
     episode_rewards = []
-    for _ in range(n_episodes):
+    for i in range(n_episodes):
+        make_video = (i == 0 and do_render)
         state, done = env.reset(), False
         episode_reward = 0.0
+        if make_video:
+            video = [env.render()]
         while not done:
             action = actor.act(state, device)
             state, reward, done, _ = env.step(action)
             episode_reward += reward
+            if make_video:
+                video.append(env.render())
         episode_rewards.append(episode_reward)
+        if make_video:
+            video_np = np.stack(video)
+            imageio.mimsave("video.gif", video_np, fps=500)
+            print("Saved video")
 
     actor.train()
     return np.asarray(episode_rewards)
@@ -599,6 +609,7 @@ def train(config: TrainConfig):
                 device=config.device,
                 n_episodes=config.n_episodes,
                 seed=config.seed,
+                do_render=config.do_render,
             )
             eval_score = eval_scores.mean()
             normalized_eval_score = env.get_normalized_score(eval_score) * 100.0
