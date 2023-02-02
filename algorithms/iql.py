@@ -209,7 +209,7 @@ def eval_actor(
         episode_rewards.append(episode_reward)
         if make_video:
             video_np = np.stack(video)
-            imageio.mimsave("video.gif", video_np, fps=500)
+            imageio.mimsave("video.gif", video_np, fps=2500)
             print("Saved video")
 
     actor.train()
@@ -236,7 +236,7 @@ def modify_reward(dataset, env_name, max_episode_steps=1000):
         min_ret, max_ret = return_reward_range(dataset, max_episode_steps)
         dataset["rewards"] /= max_ret - min_ret
         dataset["rewards"] *= max_episode_steps
-    elif "antmaze" in env_name:
+    elif "antmaze" in env_name or "pinpad" in env_name:
         dataset["rewards"] -= 1.0
 
 
